@@ -34,7 +34,8 @@ unsigned long lastDebounceTime2 = 0;   // the last time the output pin was toggl
 unsigned long debounceDelay = 100;     // debounce time
 
 int timer = 1;                // stage 1 counter
-int timer_sec;                // countdown seconds
+int timer_sec = 0;            // countdown seconds
+int timer_sec_aux = 0;
 int timer_fast;               // stage 2 counter
 int timer_faster;             // stage 3 counter
 int timer_sec_remainder;      // display ":0" sec if counter < 10
@@ -57,6 +58,44 @@ int D0[] = {0, 0, 0, 0};      // full armed
 int D1[] = {0, 0, 0, 0};      // 1 step defused
 int D2[] = {0, 0, 0, 0};      // 2 steps defused
 int D3[] = {0, 0, 0, 0};      // full defused
+
+void resetVals() {
+    button_1_state = 1;
+    button_2_state = 1;
+    no_wires_set = 0;
+    counter = 0;
+    main_state = 0;
+    button_1_state = 1;
+    button_2_state = 1;
+    lastButton1State = LOW;
+    lastButton2State = LOW;
+    enter_2stars = false;
+    enter_3stars = false;
+    lastDebounceTime1 = 0;
+    lastDebounceTime2 = 0;
+    timer = 1;             
+    timer_sec = 0;         
+    timer_fast = 0;
+    timer_faster = 0;
+    timer_sec_remainder = 0;
+    timer_min_remainder = 0;
+    SEQ = 300;
+    R = 0;
+    B = 0;
+    G = 0;
+    Y = 0;
+    D_current[0] = R;
+    D_current[1] = B;
+    D_current[2] = G;
+    D_current[3] = Y;
+    D_State = 0;
+    for (int i = 0; i < 4; i++) {
+      D0[i] = 0;
+      D1[i] = 0;
+      D2[i] = 0;
+      D3[i] = 0;
+    }
+}
 
 void intro() {
   tone(signal_pin, 600);
@@ -158,6 +197,16 @@ void incrementTimer() {
   lcd.setCursor(0, 1);
   lcd.print("timer = ");
   lcd.print(timer);
+}
+
+void incrementSeconds() {
+  timer_sec_aux = timer_sec_aux + 1;
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Set timer [sec]:");
+  lcd.setCursor(0, 1);
+  lcd.print("timer = ");
+  lcd.print(timer_sec_aux);
 }
 
 void displayTime() {
@@ -319,7 +368,7 @@ void boom() {
   lcd.print(" TERRORISTS WIN");
   delay(3500);
   noTone(signal_pin);
-  delay(1000000);
+  goState(18);
 }
 
 void goState(int state) {
@@ -407,7 +456,7 @@ void loop() {
   }
   else if (main_state == 2) {
     button_1_state = 1;
-    lcd.setCursor(1, 1);
+    lcd.setCursor(0, 1);
     lcd.print("Press B1 to ARM");
     checkButton(button_1, button_1_state, reading1, lastButton1State, lastDebounceTime1, 3, buttonBeep, goState);
   }
@@ -1018,10 +1067,10 @@ void loop() {
     button_1_state = 1;
     button_2_state = 1;
     checkButton(button_1, button_1_state, reading1, lastButton1State, lastDebounceTime1, -1, incrementTimer, buttonBeep);
-    checkButton(button_2, button_2_state, reading2, lastButton2State, lastDebounceTime2, 9, buttonBeep, goState);
+    checkButton(button_2, button_2_state, reading2, lastButton2State, lastDebounceTime2, 20, buttonBeep, goState);
   }
   else if (main_state == 9) {
-    timer_sec = timer * 60;
+    timer_sec = timer * 60 + timer_sec_aux;
     lcd.clear();
     lcd.setCursor(1, 0);
     lcd.print("Set 1st wire:");
@@ -1121,7 +1170,53 @@ void loop() {
     delay(20);
     lcd.setCursor(1, 1);
     lcd.print("PRESS B2 to ARM");
-    checkButton(button_2, button_2_state, reading2, lastButton2State, lastDebounceTime2, 4, buttonBeep, goState);
+    checkButton(button_2, button_2_state, reading2, lastButton2State, lastDebounceTime2, 4, NULL, goState);
+  }
+  else if (main_state == 17) {
+    resetVals();
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Choose game mode");
+    delay(1800);
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("1.Domination");
+    lcd.setCursor(0, 1);
+    lcd.print("2.SandBox");
+    goState(0);
+  } 
+  else if (main_state == 18) {
+      timer_sec = 10;
+      lcd.setCursor(2, 1);
+      lcd.print("RESET IN: ");
+      goState(19);
+  }
+  else if (main_state == 19) {
+    lcd.setCursor(11, 1);
+    if (timer_sec < 10) {
+      lcd.print(" ");
+    }
+    lcd.print(timer_sec);
+    delay(1000);
+    timer_sec -= 1;
+    if (timer_sec < 1)
+      goState(17);
+  }
+  else if (main_state == 20) {
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Set timer [sec]:");
+    lcd.setCursor(0,1);
+    lcd.print("timer = ");
+    lcd.print(timer_sec_aux);
+    goState(21);
+    delay(200);
+  }
+  else if (main_state == 21) {
+    button_1_state = 1;
+    button_2_state = 1;
+    checkButton(button_1, button_1_state, reading1, lastButton1State, lastDebounceTime1, -1, incrementSeconds, buttonBeep);
+    checkButton(button_2, button_2_state, reading2, lastButton2State, lastDebounceTime2, 9, buttonBeep, goState);
   }
 }
 
