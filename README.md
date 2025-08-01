@@ -10,4 +10,4 @@ This project recreates a physical puzzle inspired by the bomb from *Counter-Stri
 - **Domination**: Timer and disarm key are randomly generated for a more challenging experience.
 
 
-See the full [documentation](https://ocw.cs.pub.ro/courses/pm/prj2022/sgherman/defuse_bomb_puzzle).
+See final product photos and the full [documentation](https://ocw.cs.pub.ro/courses/pm/prj2022/sgherman/defuse_bomb_puzzle).
